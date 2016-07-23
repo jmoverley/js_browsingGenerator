@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<!-- 
+  Date: Jun 2015
+  By: jmoverley@vasonanetworks.com
+    Browsing test script
+    Load a page full of images, bypass all caching, reload (with delay)
+	See page text for details
+-->
+<head>
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="expires" content="-1">
+	<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+</head>
+<body onload="myFunction()">
+
+<h1>Vasona : Browsing test page - Image loading</h1>
+<div id="timer_div"></div>
+<div id="iteration"></div>
+<br>
+<div id="page_state"></div>
+<div id="images_left_toload"></div>
+<br>
+<div id="number_images"></div>
+<div id="image_url"></div>
+<pre>
+Use url arguments:
+ delay=<secs> : number of secs between page loads
+ images=<number> : number of images to load on page
+ NB. change URL of image in script 
+</pre>
+<br> 
+
+<script>
+// url of image to be used NB this should be less than SA max object size
+var imageURL = "testcard_vn.jpg";
+
+function getURLParameter(name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+}
+
+function myFunction() 	{
+    // defaults 
+    var iterationVal = 1;
+	var delayBetweenPageLoad = 3;
+	var numberOfImages = 4;
+    
+	var argDelay = getURLParameter('delay');
+	if (argDelay != null ) {
+		delayBetweenPageLoad = argDelay;
+	}
+	
+	var argNumImgs = getURLParameter('images');
+	if (argNumImgs != null ) {
+		numberOfImages = argNumImgs;
+	}
+	
+	
+	var argIter = getURLParameter('iteration');
+	if (argIter != null ) {
+		iterationVal = Number(argIter);
+		iterationVal++;
+	}
+
+	var imagesLeft = numberOfImages;
+	
+	document.getElementById('timer_div').innerHTML = "*WAITING* Page reload after " + delayBetweenPageLoad + " sec(s) ";
+	document.getElementById('images_left_toload').innerHTML = "images remaining: [" + imagesLeft + "]";
+	document.getElementById('number_images').innerHTML = "Number of images [" + numberOfImages + "]";
+	document.getElementById('image_url').innerHTML = "Image URL in use: [" + imageURL + "]";
+	document.getElementById('iteration').innerHTML = "Page load iteration: [" + iterationVal + "]";
+	document.getElementById('page_state').innerHTML = "Page state: loading";
+	
+
+	for (i = 0; i < numberOfImages; i++) {
+        setTimeout(function(){ 
+			var d = new Date();
+			var n = d.getMilliseconds();
+			var noCacheUrl = imageURL + "?" + n
+			
+			var img = new Image();
+			img.onload = function(){
+					imagesLeft--;
+					document.getElementById('images_left_toload').innerHTML = "Images remaining: [" + imagesLeft + "]"
+					if ( imagesLeft == 0 ){
+						document.getElementById('page_state').innerHTML = "Page state: completed";
+						var seconds_left = delayBetweenPageLoad;
+						
+						var interval = setInterval(function() {
+							document.getElementById('timer_div').innerHTML = "Page reload after " + --seconds_left + " sec(s)";
+						
+							if (seconds_left <= 0) {
+									clearInterval(interval)
+									setGetParameter("iteration", iterationVal);
+								}
+							}, 1000);
+					};
+			};
+			img.src = noCacheUrl;
+			document.body.appendChild(img);
+			document.body.appendChild(document.createElement("BR"));
+		}, 800);  
+     }
+}
+
+function setGetParameter(paramName, paramValue)
+{
+        var url = window.location.href;
+        var splitAtAnchor = url.split('#');
+        url = splitAtAnchor[0];
+        var anchor = typeof splitAtAnchor[1] === 'undefined' ? '' : '#' + splitAtAnchor[1];
+    if (url.indexOf(paramName + "=") >= 0)
+    {
+        var prefix = url.substring(0, url.indexOf(paramName));
+        var suffix = url.substring(url.indexOf(paramName));
+        suffix = suffix.substring(suffix.indexOf("=") + 1);
+        suffix = (suffix.indexOf("&") >= 0) ? suffix.substring(suffix.indexOf("&")) : "";
+        url = prefix + paramName + "=" + paramValue + suffix;
+    }
+    else
+    {
+    if (url.indexOf("?") < 0)
+        url += "?" + paramName + "=" + paramValue;
+    else
+        url += "&" + paramName + "=" + paramValue;
+    }
+    location.href = url + anchor;
+}
+</script>
+
+</body>
+</html>
